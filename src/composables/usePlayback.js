@@ -103,7 +103,8 @@ export const INSTRUMENTS = [
   },
 ]
 
-export const DEFAULT_INSTRUMENT_ID = INSTRUMENTS[0].id
+/** Named, not positional, so reordering the presets cannot change the default. */
+export const DEFAULT_INSTRUMENT_ID = 'bells'
 
 export function findInstrument(id) {
   return INSTRUMENTS.find((instrument) => instrument.id === id) ?? INSTRUMENTS[0]
