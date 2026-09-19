@@ -1,5 +1,5 @@
 <script setup>
-import { MIN_BPM, MAX_BPM } from '../composables/usePlayback.js'
+import { INSTRUMENTS, MIN_BPM, MAX_BPM } from '../composables/usePlayback.js'
 import { soundingColor } from '../theme.js'
 
 defineProps({
@@ -8,9 +8,10 @@ defineProps({
   // Whatever is sounding right now: a resolved chord, or a single note.
   sounding: { type: Object, default: null },
   canPlay: { type: Boolean, default: true },
+  instrumentId: { type: String, required: true },
 })
 
-const emit = defineEmits(['play', 'stop', 'update:bpm'])
+const emit = defineEmits(['play', 'stop', 'update:bpm', 'update:instrumentId'])
 </script>
 
 <template>
@@ -32,6 +33,27 @@ const emit = defineEmits(['play', 'stop', 'update:bpm'])
       >
         Stop
       </button>
+    </div>
+
+    <!--
+      Switching voices mid-run is deliberately allowed: the schedule, the trail
+      and the highlight all survive it, so you can hear a progression change
+      colour without losing your place.
+    -->
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400" for="instrument">
+        Instrument
+      </label>
+      <select
+        id="instrument"
+        class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+        :value="instrumentId"
+        @change="emit('update:instrumentId', $event.target.value)"
+      >
+        <option v-for="instrument in INSTRUMENTS" :key="instrument.id" :value="instrument.id">
+          {{ instrument.name }}
+        </option>
+      </select>
     </div>
 
     <div>

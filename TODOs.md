@@ -5,63 +5,49 @@ up later does not mean rediscovering it.
 
 ---
 
-## 1. Put it under git
+## 1. CI, and the decision git was blocking
 
-Nothing is version controlled yet. `.gitignore` already exists (`node_modules`,
-`dist`), so this is `git init`, a first commit, and a remote.
+Git is done — the repo is on GitHub at `nvanthao/tonnetz`, pushed to `main`.
+What was deferred *behind* it is not:
 
-**Why it is more than housekeeping.** Two decisions in the codebase are shaped
-by the absence of history:
+**Still to do: a CI check** running `npm test` and `npm run build`. The suite is
+fast (~300ms) and already guards things that are easy to break by eye — see the
+colour-vision tests.
+
+**Still to decide.** Two things in the codebase were shaped by the absence of
+history, and now that there is history, they should be settled:
 
 - `layoutProgression` in `src/music/tonnetz.js` (~70 lines, plus its tests) is
   **not wired into the UI**. It picks one triangle per chord so a progression
   reads as a connected walk; we replaced it with "light every instance". It was
-  kept rather than deleted specifically because there is no history to recover
-  it from. Once there is, decide properly: revive it behind a toggle, or delete
-  it. It should not sit unused indefinitely.
-- Design rationale currently lives in `README.md` and in comments because there
-  are no commit messages to hold it. That is not wrong, but some of it
-  (the colour-vision fix, the Tone.js teardown ordering) would read better as
-  commit history.
-
-**Also worth doing at the same time:** a CI check running `npm test` and
-`npm run build`. The suite is fast (~300ms) and already guards things that are
-easy to break by eye — see the colour-vision tests.
+  kept rather than deleted specifically because there was no history to recover
+  it from. There is now: revive it behind a toggle, or delete it. It should not
+  sit unused indefinitely. (See also item 3 — it is why `DEFAULT_BOUNDS` is 9×6.)
+- Design rationale lives in `README.md` and in comments because there were no
+  commit messages to hold it. That is not wrong, but new rationale
+  (the colour-vision fix, the Tone.js teardown ordering) should go in commits
+  from here on.
 
 ---
 
-## 2. Deploy to a Cloudflare Worker
+## 2. Deploy to a Cloudflare Worker — **done**
 
-The app is a **purely static SPA** — `npm run build` emits `dist/`, there is no
-server-side logic, no API, no secrets, and no environment config. All audio is
-client-side Tone.js. So this is static-asset hosting, not a request handler.
+Shipped as **Workers Static Assets** (not Pages): `wrangler.jsonc` points
+`assets.directory` at `./dist` with `not_found_handling:
+"single-page-application"`, on the custom domain `tonnetz.quirkyquokka.dev`.
+`npm run deploy` builds and deploys. Workers was chosen over Pages because it
+leaves room to add a real request handler later; today there is none — the app
+is a purely static SPA with no API, no secrets and no env config.
 
-**Decide first:** Workers with static assets vs. Cloudflare Pages. Workers Static
-Assets is the current direction and leaves room to add a Worker later; Pages is
-the older path. Pick one deliberately rather than by habit.
+**Still true, and worth not forgetting:**
 
-**Known inputs:**
-
-| | |
-|---|---|
-| Build command | `npm run build` |
-| Output directory | `dist` |
-| Node version | built on 24.x |
-| Routing | single page, no router — no SPA fallback needed *yet* |
-| Secrets / env vars | none |
-
-**Check the current docs when implementing** rather than trusting a remembered
-`wrangler.jsonc` shape — the static-assets config has moved more than once, and
-this file should not pretend to pin it.
-
-**Small things not to forget:**
-
-- Nothing in the app needs to be same-origin, but Tone.js pulls no external
-  resources at runtime, so no CSP or CORS work is expected.
-- If a router is ever added, static hosting needs an SPA fallback to
-  `index.html`; note it then.
-- Bundle is ~320 KB / ~93 KB gzipped, most of it Tone.js. Fine to ship, but if
+- The SPA fallback is configured but unexercised: there is no router, so every
+  request is `/`. It matters the moment one is added.
+- Bundle is ~327 KB / ~95 KB gzipped, most of it Tone.js. Fine to ship, but if
   load time ever matters, that is the thing to look at first.
+- Tone.js pulls no external resources at runtime, so no CSP or CORS work is
+  expected. A sampled instrument (see the instrument picker in `usePlayback.js`)
+  would change that — samples would need to be served from `dist/` too.
 
 ---
 

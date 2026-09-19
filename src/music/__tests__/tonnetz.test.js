@@ -5,6 +5,7 @@ import {
   nodePosition,
   trianglesForChord,
   coveredTriadCount,
+  triangleLabelsForChords,
   layoutProgression,
   sharedCornerCount,
   latticeCentre,
@@ -327,5 +328,42 @@ describe('the lattice shows real voice leading', () => {
       expect(sharedPitches(chords[0], chords[1])).toBe(expected)
       expect(sharedCornerCount(a, b)).toBe(expected)
     }
+  })
+})
+
+describe('triangleLabelsForChords', () => {
+  it('labels every instance of a chord with its numeral', () => {
+    const chords = resolveProgression(['I', 'IV', 'V'], { tonic: 0, mode: 'major' })
+    const labels = triangleLabelsForChords(tonnetz, chords)
+
+    for (const chord of chords) {
+      const instances = trianglesForChord(tonnetz, chord)
+      expect(instances.length).toBeGreaterThan(1) // the lattice is periodic
+      for (const triangle of instances) expect(labels.get(triangle.id)).toBe(chord.symbol)
+    }
+  })
+
+  it('leaves untouched triangles unlabelled', () => {
+    const chords = resolveProgression(['I'], { tonic: 0, mode: 'major' })
+    const labels = triangleLabelsForChords(tonnetz, chords)
+    const [dMinor] = trianglesForChord(tonnetz, { root: 2, quality: 'minor' })
+    expect(labels.has(dMinor.id)).toBe(false)
+  })
+
+  it('skips chords that have no triangle', () => {
+    const chords = resolveProgression(['viio'], { tonic: 0, mode: 'major' })
+    expect(triangleLabelsForChords(tonnetz, chords).size).toBe(0)
+  })
+
+  it('joins the numerals when two spellings land on one triad', () => {
+    const chords = resolveProgression(['bVI', '#V'], { tonic: 0, mode: 'major' })
+    const [triangle] = trianglesForChord(tonnetz, chords[0])
+    expect(triangleLabelsForChords(tonnetz, chords).get(triangle.id)).toBe('bVI/#V')
+  })
+
+  it('labels a repeated chord once', () => {
+    const chords = resolveProgression(['I', 'IV', 'V'], { tonic: 0, mode: 'major' }, { resolveToTonic: true })
+    const [tonic] = trianglesForChord(tonnetz, chords[0])
+    expect(triangleLabelsForChords(tonnetz, chords).get(tonic.id)).toBe('I')
   })
 })

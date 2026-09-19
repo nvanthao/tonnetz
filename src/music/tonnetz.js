@@ -161,6 +161,36 @@ export function coveredTriadCount(tonnetz) {
 }
 
 /**
+ * Label every triangle a progression touches with the Roman numeral that put it
+ * there, so a lit triangle says *which* degree is sounding and not merely that
+ * something is.
+ *
+ * A chord lights all of its instances, and each instance gets the same label -
+ * the periodicity is the point, and three triangles reading `IV` are three
+ * pictures of one chord. Chords with no triangle (diminished, augmented) simply
+ * contribute nothing. If two different numerals in one progression resolve to
+ * the same triad - enharmonic spellings such as `bVI` and `#V` - the labels are
+ * joined rather than one silently winning.
+ *
+ * @param {object} tonnetz
+ * @param {Array<{root: number, quality: string, symbol: string}>} chords
+ * @returns {Map<string, string>} triangle id -> label
+ */
+export function triangleLabelsForChords(tonnetz, chords) {
+  const labels = new Map()
+  for (const chord of chords) {
+    const symbol = chord?.symbol
+    if (!symbol) continue
+    for (const triangle of trianglesForChord(tonnetz, chord)) {
+      const existing = labels.get(triangle.id)
+      if (!existing) labels.set(triangle.id, symbol)
+      else if (!existing.split('/').includes(symbol)) labels.set(triangle.id, `${existing}/${symbol}`)
+    }
+  }
+  return labels
+}
+
+/**
  * How hard the layout is pulled toward the middle of the lattice, relative to
  * the cost of a step between chords. Small: a tie-breaker, never a reason to
  * break an adjacency.

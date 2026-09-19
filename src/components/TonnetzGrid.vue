@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { nodeColors, triangleFill, triangleOutline } from '../theme.js'
+import { nodeColors, triangleFill, triangleLabelColor, triangleOutline } from '../theme.js'
 import { chordName, pitchClassNoteName } from '../music/pitch.js'
 
 const props = defineProps({
@@ -10,12 +10,14 @@ const props = defineProps({
   activeTriangleIds: { type: Set, required: true },
   playedTriangleIds: { type: Set, default: () => new Set() },
   previewTriangleIds: { type: Set, default: () => new Set() },
+  triangleLabels: { type: Map, default: () => new Map() },
   activePitchClass: { type: Number, default: null },
 })
 
 const emit = defineEmits(['select-chord', 'select-note'])
 
 const NODE_RADIUS = 22
+const LABEL_FONT_SIZE = 26
 
 // Painted in tiers: at rest, the trail, what is sounding, then any preview on
 // top. Everything above the first tier carries an outline that a neighbour
@@ -33,6 +35,22 @@ const orderedTriangles = computed(() => {
   }
   return [...rest, ...played, ...active, ...preview]
 })
+
+/**
+ * Roman numerals are written only on the triangles the run has reached - what is
+ * sounding, what it has already sounded, and whatever the pointer is previewing.
+ * Labelling every instance of every chord up front would print a dozen numerals
+ * across a resting lattice; revealing them as the progression walks is what
+ * makes the walk readable.
+ */
+const labelledTriangles = computed(() =>
+  orderedTriangles.value
+    .filter((triangle) => props.triangleLabels.has(triangle.id))
+    .filter((triangle) => {
+      const state = stateOf(triangle)
+      return state.isActive || state.hasPlayed || state.isPreview
+    }),
+)
 
 function stateOf(triangle) {
   return {
@@ -69,6 +87,28 @@ function isNodeActive(node) {
       >
         <title>{{ chordName(triangle.root, triangle.quality) }}</title>
       </polygon>
+    </g>
+
+    <!--
+      Labels sit between the triangles and the nodes, and take no pointer events
+      of their own, so writing on a triangle never stops it answering a click.
+    -->
+    <g class="pointer-events-none">
+      <text
+        v-for="triangle in labelledTriangles"
+        :key="triangle.id"
+        :x="triangle.centroid.x"
+        :y="triangle.centroid.y"
+        :fill="triangleLabelColor(stateOf(triangle))"
+        text-anchor="middle"
+        dominant-baseline="central"
+        :font-size="LABEL_FONT_SIZE"
+        font-weight="700"
+        font-family="ui-sans-serif, system-ui, sans-serif"
+        class="transition-[fill] duration-100"
+      >
+        {{ triangleLabels.get(triangle.id) }}
+      </text>
     </g>
 
     <!--

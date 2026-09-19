@@ -10,13 +10,17 @@ npm run build        # production build to dist/
 npm run preview      # serve the built output
 npm test             # run the suite once
 npm run test:watch   # watch mode
+npm run deploy       # build, then wrangler deploy to Cloudflare Workers
 
 npx vitest run src/music/__tests__/tonnetz.test.js     # one file
 npx vitest run -t 'connected walk'                      # one test by name
 ```
 
-There is no linter or formatter configured, and no git repository — see
-`TODOs.md` for deferred work (git, Cloudflare deploy, mobile).
+There is no linter or formatter configured and no CI. The app ships as static
+assets on Cloudflare Workers (`wrangler.jsonc`, custom domain
+`tonnetz.quirkyquokka.dev`) — there is no server-side code, so the Worker only
+serves `dist/`. See `TODOs.md` for what is still deferred (CI, mobile, and the
+unused `layoutProgression`).
 
 ## Architecture
 
@@ -77,6 +81,22 @@ sites:
 
 `Tone.start()` runs on first user interaction, as autoplay policy requires.
 
+### Instruments
+
+`INSTRUMENTS` in `usePlayback.js` is a list of `PolySynth` presets - a voice
+class plus its options. They are synthesized, not sampled, so switching is
+instant and there is nothing to load; a sampled piano would be a `Tone.Sampler`,
+which is API-compatible with the `PolySynth` here but brings megabytes of audio
+and a loading state. `volume` is per preset because a sawtooth stack and a
+triangle are nowhere near the same loudness at the same gain; the levels were
+trimmed by rendering each one through `Tone.Offline` and comparing peaks.
+
+Switching mid-run is supported and deliberate: the `Tone.Part` callback reads
+`synth` at tick time instead of closing over it, so swapping the variable is
+enough for the next chord to sound on the new voice while the schedule, trail
+and highlight carry on. The old instrument is released and disposed on a delay
+(`RETIRE_MS`) rather than immediately, so its tail is not chopped off.
+
 ### Triangle visual states
 
 Four states, resolved by `triangleFill` and `triangleOutline` in `theme.js`:
@@ -86,6 +106,17 @@ Preview only changes the **outline**, never the fill — a bright fill means
 "sounding now", and borrowing it would make two triangles claim to sound during
 playback. `TonnetzGrid` paints in matching z-order tiers so outlines are not
 overdrawn by later neighbours.
+
+### Roman numerals on the lattice
+
+`triangleLabelsForChords` (in `src/music/tonnetz.js`) maps triangle id -> the
+numeral that put it there, and `TonnetzGrid` writes that numeral at the
+triangle's centroid. Only triangles the run has reached are labelled — sounding,
+trail, or previewed — because labelling every instance of every chord up front
+prints a dozen numerals across a resting lattice. The label has no colour of its
+own: `triangleLabelColor` picks dark or light purely for contrast against
+whatever `triangleFill` put underneath, so the palette's separation guarantees
+are untouched.
 
 ### Colour
 

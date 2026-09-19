@@ -90,6 +90,20 @@ export function triangleOutline({ isActive = false, hasPlayed = false, isPreview
   return { stroke: LATTICE_EDGE_COLOR, width: 2, dash: null }
 }
 
+/**
+ * Colour for the Roman numeral written inside a triangle.
+ *
+ * No new hue: the label reuses the two text colours already on screen, picked
+ * only for contrast against whatever `triangleFill` put underneath it. The
+ * sounding and trail fills are light, so the numeral goes dark on them; a
+ * resting or merely previewed triangle keeps its dim fill, so the numeral goes
+ * light. Nothing here is a meaning-bearing colour, so the palette's separation
+ * guarantees are untouched.
+ */
+export function triangleLabelColor({ isActive = false, hasPlayed = false } = {}) {
+  return isActive || hasPlayed ? NOTE_HIGHLIGHT_TEXT_COLOR : NODE_TEXT_COLOR
+}
+
 /** Fill, stroke and text for a node, given whether it is currently sounding. */
 export function nodeColors(isActive) {
   return isActive

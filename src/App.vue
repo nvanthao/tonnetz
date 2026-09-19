@@ -8,6 +8,7 @@ import { usePlayback } from './composables/usePlayback.js'
 import { resolveProgression } from './music/romanNumerals.js'
 import { findProgression, PROGRESSIONS } from './music/progressions.js'
 import { chordName, pitchClassNoteName } from './music/pitch.js'
+import { triangleLabelsForChords } from './music/tonnetz.js'
 import { MAJOR_COLOR, MINOR_COLOR, NOTE_HIGHLIGHT_COLOR, PLAYED_COLOR } from './theme.js'
 
 const tonic = ref(0)
@@ -30,6 +31,7 @@ watch(progressionId, (id) => {
 })
 
 const {
+  tonnetz,
   nodes,
   triangles,
   viewBox,
@@ -44,7 +46,20 @@ const {
   clearPlayed,
 } = useTonnetz()
 
-const { isPlaying, currentIndex, currentChord, bpm, play, stop, playChord, playNote } = usePlayback({
+// The numeral each triangle will show once the run reaches it.
+const triangleLabels = computed(() => triangleLabelsForChords(tonnetz.value, chords.value))
+
+const {
+  isPlaying,
+  currentIndex,
+  currentChord,
+  bpm,
+  instrumentId,
+  play,
+  stop,
+  playChord,
+  playNote,
+} = usePlayback({
   chords,
   onChord: (chord) => {
     setActiveChord(chord)
@@ -137,9 +152,11 @@ const legend = [
           :bpm="bpm"
           :sounding="displayedSounding"
           :can-play="chords.length > 0"
+          :instrument-id="instrumentId"
           @play="startPlayback"
           @stop="stopPlayback"
           @update:bpm="bpm = $event"
+          @update:instrument-id="instrumentId = $event"
         />
 
         <!-- Wrap whole entries rather than breaking a label across two lines. -->
@@ -163,6 +180,7 @@ const legend = [
           :active-triangle-ids="activeTriangleIds"
           :played-triangle-ids="playedTriangleIds"
           :preview-triangle-ids="previewTriangleIds"
+          :triangle-labels="triangleLabels"
           :active-pitch-class="activePitchClass"
           @select-chord="auditionChord"
           @select-note="auditionNote"
