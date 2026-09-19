@@ -14,9 +14,15 @@ export const PROGRESSIONS = [
   { id: 'fifties', name: '50s progression', numerals: ['I', 'vi', 'IV', 'V'], mode: 'major' },
   { id: 'modern-pop', name: 'Modern pop', numerals: ['vi', 'IV', 'I', 'V'], mode: 'major' },
   { id: 'plagal-turn', name: 'Plagal turnaround', numerals: ['I', 'IV', 'vi', 'V'], mode: 'major' },
-  { id: 'canon', name: 'Pachelbel (short)', numerals: ['I', 'V', 'vi', 'iii', 'IV'], mode: 'major' },
+  { id: 'canon', name: 'Canon', numerals: ['I', 'V', 'vi', 'iii', 'IV'], mode: 'major' },
+  { id: 'turnaround', name: 'Turnaround', numerals: ['I', 'vi', 'ii', 'V'], mode: 'major' },
+  { id: 'three-chord-rock', name: 'Three-chord rock', numerals: ['I', 'V', 'IV', 'V'], mode: 'major' },
+  { id: 'relative-minor-loop', name: 'Relative minor loop', numerals: ['vi', 'V', 'IV', 'V'], mode: 'major' },
+  { id: 'mixolydian', name: 'Mixolydian rock', numerals: ['I', 'bVII', 'IV'], mode: 'major' },
   { id: 'doo-wop-minor', name: 'Minor pop', numerals: ['i', 'VI', 'III', 'VII'], mode: 'minor' },
   { id: 'andalusian', name: 'Andalusian cadence', numerals: ['i', 'VII', 'VI', 'V'], mode: 'minor' },
+  { id: 'minor-classic', name: 'Minor classic', numerals: ['i', 'iv', 'V'], mode: 'minor' },
+  { id: 'minor-rock', name: 'Minor rock', numerals: ['i', 'VII', 'iv', 'V'], mode: 'minor' },
   { id: 'hexatonic', name: 'Hexatonic cycle', numerals: ['I', 'i', 'bVI', 'bvi', 'III', 'iii'], mode: 'major' },
 ]
 
